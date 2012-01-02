@@ -23,6 +23,7 @@
 
 require 'command-t/vim'
 require 'command-t/scanner'
+require 'digest/md5'
 
 module CommandT
   # Reads the current directory recursively for the paths to all regular files.
@@ -38,6 +39,7 @@ module CommandT
       @max_files            = options[:max_files] || 10_000
       @max_caches           = options[:max_caches] || 1
       @scan_dot_directories = options[:scan_dot_directories] || false
+      @cache_directory      = options[:cache_directory] || false
     end
 
     def paths
@@ -48,7 +50,33 @@ module CommandT
         @depth        = 0
         @files        = 0
         @prefix_len   = @path.chomp('/').length
-        add_paths_for_directory @path, @paths[@path]
+        has_saved_cache = false
+        digest = Digest::MD5.hexdigest(@path)
+        filepath = File.expand_path(@cache_directory + "/" + digest)
+
+        if @cache_directory != false
+          # Check to see if there is a saved cache, if there is then load it.
+          begin
+            File.open(filepath, 'r') do |f|
+              @paths[@path] = Marshal.load f.read
+            end
+            has_saved_cache = true
+          rescue
+          end
+        end
+
+        if @cache_directory == false || has_saved_cache == false
+          add_paths_for_directory @path, @paths[@path]
+
+          # Save directories cache to file
+          begin
+            data = Marshal.dump(@paths[@path])
+            f = File.new(filepath, 'w')
+            f.write(data)
+            f.close()
+          rescue
+          end
+        end
       rescue FileLimitExceeded
       end
       @paths[@path]
@@ -56,6 +84,16 @@ module CommandT
 
     def flush
       @paths = {}
+
+      if @cache_directory != false
+        digest = Digest::MD5.hexdigest(@path)
+        filepath = File.expand_path(@cache_directory + "/" + digest)
+        begin
+          # Flush will also delete the saved file
+          File.delete(filepath)
+        rescue
+        end
+      end
     end
 
   private

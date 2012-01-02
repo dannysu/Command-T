@@ -73,6 +73,10 @@ module CommandT
     end
 
     def flush
+      # when flushing, also delete the saved cached file
+      file_finder.path  = File.expand_path(VIM::pwd)
+      file_finder.flush
+
       @max_height   = nil
       @file_finder  = nil
     end
@@ -320,7 +324,8 @@ module CommandT
         :max_caches             => get_number('g:CommandTMaxCachedDirectories'),
         :always_show_dot_files  => get_bool('g:CommandTAlwaysShowDotFiles'),
         :never_show_dot_files   => get_bool('g:CommandTNeverShowDotFiles'),
-        :scan_dot_directories   => get_bool('g:CommandTScanDotDirectories')
+        :scan_dot_directories   => get_bool('g:CommandTScanDotDirectories'),
+        :cache_directory        => get_string('g:CommandTSavedCacheDirectory')
     end
 
     def jump_finder
