@@ -325,7 +325,8 @@ module CommandT
         :always_show_dot_files  => get_bool('g:CommandTAlwaysShowDotFiles'),
         :never_show_dot_files   => get_bool('g:CommandTNeverShowDotFiles'),
         :scan_dot_directories   => get_bool('g:CommandTScanDotDirectories'),
-        :cache_directory        => get_string('g:CommandTSavedCacheDirectory')
+        :cache_directory        => get_string('g:CommandTSavedCacheDirectory'),
+        :directories_to_save    => get_list_or_string('g:CommandTDirectoriesSavedToFile')
     end
 
     def jump_finder

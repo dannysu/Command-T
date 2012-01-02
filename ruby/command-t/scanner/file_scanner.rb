@@ -40,6 +40,12 @@ module CommandT
       @max_caches           = options[:max_caches] || 1
       @scan_dot_directories = options[:scan_dot_directories] || false
       @cache_directory      = options[:cache_directory] || false
+      @directories_to_save  = options[:directories_to_save] || false
+      if @directories_to_save != false
+        if !@directories_to_save.respond_to?('each')
+          @directories_to_save = @directories_to_save.split
+        end
+      end
     end
 
     def paths
@@ -69,12 +75,20 @@ module CommandT
           add_paths_for_directory @path, @paths[@path]
 
           # Save directories cache to file
-          begin
-            data = Marshal.dump(@paths[@path])
-            f = File.new(filepath, 'w')
-            f.write(data)
-            f.close()
-          rescue
+          if @directories_to_save != false
+            @directories_to_save.each do |directory|
+              directory = File.expand_path(directory)
+              current_path = File.expand_path(@path)
+              if current_path.start_with?(directory)
+                begin
+                  data = Marshal.dump(@paths[@path])
+                  f = File.new(filepath, 'w')
+                  f.write(data)
+                  f.close()
+                rescue
+                end
+              end
+            end
           end
         end
       rescue FileLimitExceeded
