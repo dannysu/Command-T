@@ -57,10 +57,11 @@ module CommandT
         @files        = 0
         @prefix_len   = @path.chomp('/').length
         has_saved_cache = false
-        digest = Digest::MD5.hexdigest(@path)
-        filepath = File.expand_path(@cache_directory + "/" + digest)
 
         if @cache_directory != false
+          digest = Digest::MD5.hexdigest(@path)
+          filepath = File.expand_path(@cache_directory + "/" + digest)
+
           # Check to see if there is a saved cache, if there is then load it.
           begin
             File.open(filepath, 'r') do |f|
