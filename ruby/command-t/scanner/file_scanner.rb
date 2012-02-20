@@ -56,7 +56,6 @@ module CommandT
         @depth        = 0
         @files        = 0
         @prefix_len   = @path.chomp('/').length
-        has_saved_cache = false
 
         if @cache_directory != false
           digest = Digest::MD5.hexdigest(@path)
@@ -66,33 +65,34 @@ module CommandT
           begin
             File.open(filepath, 'r') do |f|
               @paths[@path] = Marshal.load f.read
+              return @paths[@path]
             end
-            has_saved_cache = true
           rescue
           end
         end
 
-        if @cache_directory == false || has_saved_cache == false
-          add_paths_for_directory @path, @paths[@path]
+        add_paths_for_directory @path, @paths[@path]
+      rescue FileLimitExceeded
+      end
 
-          # Save directories cache to file
-          if @directories_to_save != false
-            @directories_to_save.each do |directory|
-              directory = File.expand_path(directory)
-              current_path = File.expand_path(@path)
-              if current_path.start_with?(directory)
-                begin
-                  data = Marshal.dump(@paths[@path])
-                  f = File.new(filepath, 'w')
-                  f.write(data)
-                  f.close()
-                rescue
-                end
+      begin
+        # Save directories cache to file
+        if @directories_to_save != false
+          @directories_to_save.each do |directory|
+            directory = File.expand_path(directory)
+            current_path = File.expand_path(@path)
+            if current_path.start_with?(directory)
+              begin
+                data = Marshal.dump(@paths[@path])
+                f = File.new(filepath, 'w')
+                f.write(data)
+                f.close()
+              rescue
               end
             end
           end
         end
-      rescue FileLimitExceeded
+      rescue
       end
       @paths[@path]
     end
